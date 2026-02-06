@@ -1,0 +1,484 @@
+body {
+   min-height: 100vh;
+   width: 100%;
+   margin: 0;
+   padding: 0;
+   font-family: 'Kanit', sans-serif;
+   background-color: #e2ced3;
+
+   /* align-items: flex-start; */
+   padding-top: 20px;
+   padding-bottom: 20px;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+}
+
+body::before {
+    content: "💗";
+    position: absolute;
+    top: 10%; left: 5%; font-size: 2.5rem; opacity: 0.3;
+}
+
+body::after {
+    content: "💗";
+    position: absolute;
+    bottom: 15%; right: 10%; font-size: 2.5rem; opacity: 0.3;
+}
+
+/* กล่องข้อความหลัก */
+#game-container {
+  padding: 3em 1.5em;
+  border-radius: 35px;
+  box-shadow: 0 15px 45px rgba(255, 77, 109, 0.15);
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  position: relative;
+  z-index: 10; 
+  box-sizing: border-box;
+  margin: auto;
+}
+
+/* จัดการหน้า (Step) */
+.step {
+    display: none;
+}
+
+.step.active {
+    display: block;
+}
+
+/* ส่วนประกอบซองจดหมาย */
+.envelope-wrapper {
+    position: relative;
+    width: 280px;
+    height: 180px;
+    background-color: #ff85a1;
+    margin: 60px auto 0;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.01);
+    cursor: pointer;
+    z-index: 1;
+    transition: transform 0.3s ease;
+}
+
+.envelope-wrapper:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 30px 50px -10px rgba(255, 77, 109, 0.6);
+}
+
+.envelope-wrapper.open .flap {
+    transform: rotateX(180deg);
+    z-index: 1;
+    border-top-color: #a4161a;
+}
+
+.envelope-wrapper.open .letter-card {
+    transform: translateX(-50%) translateY(-120px);
+    z-index: 5;
+    transition-delay: 0.6s;
+}
+
+.flap {
+    position: absolute;
+    top: 0; 
+    left: 0;
+    width: 0;
+    height: 0;
+    border-left: 140px solid transparent;
+    border-right: 140px solid transparent;
+    border-top: 100px solid #dd758f;
+    transform-origin: top;
+    transition: transform 0.6s ease 0s;
+    z-index: 6;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+}
+.flap::after {
+    content: "❤️";
+    font-size: 28px;
+    position: absolute;
+    top: -65px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    opacity: 1;
+    transition: opacity 0.4s ease;
+}
+.envelope-wrapper.open .flap::after {
+    opacity: 0;
+}
+
+.pocket {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    border-left: 140px solid transparent;
+    border-right: 140px solid transparent;
+    border-bottom: 95px solid #ff4d6d;
+    z-index: 4;
+    border-radius: 0 0 10px 10px;
+    pointer-events: none;
+    filter: drop-shadow(0 -3px 5px rgba(0,0,0,0.1));
+}
+
+.letter-card {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 240px;
+    height: 150px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px 15px;
+    box-sizing:  border-box;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.4s;
+}
+.letter-card::before {
+    content: "";
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border: 2px dashed #ddb3c1;
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+.letter-text {
+    font-size: 15px;
+    color: #c9784a;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.6;
+    font-family: 'Sarabun', sans-serif;
+}
+
+/* ระบบจิ๊กซอว์ */
+#puzzle-board {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-gap: 8px;
+    justify-content: center;
+    margin: 25px auto;
+    padding: 10px;
+    background: #fff0f3;
+    border-radius: 15px;
+    width: fit-content;
+}
+
+.tile {
+    width: 100px;
+    height: 100px;
+    background-size: 300px 300px;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    border: 1px solid #ddd;
+}
+
+.tile:hover {
+    transform: scale(1.02);
+    z-index: 10;
+}
+
+/* กล่องของขวัญ (ใช้ ID ตาม HTML) */
+#gift-box {
+    font-size: 50px;
+    cursor: pointer;
+    display: inline-block;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: #ff4f6f; /* ย้ายสีมาจาก .gift-box เดิม */
+    margin-bottom: 10px;
+}
+
+#gift-box:hover {
+    transform: scale(1.2) rotate(8deg);
+}
+
+/* เอฟเฟกต์หัวใจ */
+.heart-particle {
+    position: fixed; 
+    pointer-events: none;
+    z-index: 9999;
+}
+
+.hertbet {
+    color: #ff4d6d;
+    letter-spacing: 5px;
+    margin-bottom: 20px;
+}
+
+.text-hertbet {
+    font-size: 25px;
+    color: #6a6a6a;
+    margin-bottom: 10px;
+}
+
+/* ปุ่มและ Input */
+.text-buttom {
+    /* หมายเหตุ: class นี้สไตล์เหมือน button แต่ใช้กับ div ในหน้าแรก */
+    color: white;
+    background: linear-gradient(to bottom, #ff6b8b, #ff4d6d);
+    border: none;
+    padding: 12px 40px;
+    border-radius: 30px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(255, 77, 109, 0.4), inset 0 -3px 5px rgba(0, 0, 0, 0.01);
+    transition: all 0.3s ease;
+    display: inline-block;
+    margin-top: 20px;
+}
+
+button {
+    background: linear-gradient(to bottom, #ff6b8b, #ff4d6d);
+    color: white;
+    border: none;
+    padding: 12px 40px;
+    border-radius: 30px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow:  0 5px 15px rgba(255, 77, 109, 0.4), inset 0 -3px 5px rgba(0, 0, 0, 0.01);
+    transition: all 0.3s ease;
+    display: inline-block;
+    margin-top: 20px;
+    touch-action: manipulation;
+}
+
+button:hover {
+    transform: translateY(-3px) scale(1.05s);
+    background: linear-gradient(to bottom, #ff85a1, #ff5c8d);
+    box-shadow: 0 8px 20px rgba(255, 77, 109, 0.6), inset 0 -3px 5px rgba(0, 0, 0, 0.1);
+}
+
+button:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 2px 5px rgba(255, 77, 109, 0.4), inset 0 3px 5px rgba(0, 0, 0, 0.2);
+}
+
+input {
+    background: linear-gradient(to bottom, #eeeaeb, #c0adb1);
+    color: rgb(231, 16, 195);
+    border: none;
+    padding: 12px 40px;
+    border-radius: 30px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow:  0 5px 15px rgba(255, 77, 109, 0.4), inset 0 -3px 5px rgba(0, 0, 0, 0.01);
+    transition: all 0.3s ease;
+    display: inline-block;
+    margin-top: 20px;
+}
+
+input:hover {
+    transform: translateY(-3px) scale(1.05s);
+    background: linear-gradient(to bottom, #fdeaee, #dfabbb);
+    box-shadow: 0 8px 20px rgba(247, 156, 172, 0.6), inset 0 -3px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Typography ทั่วไป */
+h2 {
+    font-size: 25px;
+    color: #6a6a6a;
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 25px;
+    color: #6a6a6a;
+    margin-bottom: 10px;
+} 
+
+h3 {
+    font-size: 15px;
+    color: #6a6a6a;
+    margin-bottom: 10px;
+}
+
+/* Timer */
+.love-timer {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.time-box {
+    background: #ffe6ee;
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    box-shadow:  0 8px 20px rgba(255, 105, 135, 0.2);
+    margin-bottom: 10px;
+}
+
+.time-box span {
+    font-size: 36px;
+    font-weight: 800;
+    color: #ff4f81;
+}
+
+.time-box small {
+    display: block;
+    font-size: 14px;
+    color: #ff7aa2;
+}
+
+.love-quote {
+    margin-top: 15px;
+    font-style: italic;
+    color: #ff4f81;
+}
+
+/* Responsive (รวม Media Queries ไว้ที่เดียว) */
+@media (max-width: 768px) {
+    h2 {
+        font-size: 1.3rem;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    p {
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+    }
+
+    #game-container {
+        padding: 16px;
+    }
+
+    .love-timer {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .time-box {
+        width: auto;
+        padding: 14px;
+    }
+
+    button {
+        width: 100%;
+        font-size: 1rem;
+        padding: 12px;
+    }
+
+    input {
+        width: 100%;
+        font-size: 1rem;
+        padding: 10px;
+    }
+
+    #puzzle-board {
+        grid-template-columns: repeat(3, 100px);
+        transform: scale(0.85);
+        transform-origin: top center;
+        margin-top: 10px;
+        margin-bottom: -15px;
+    }
+
+    #step2.active {
+        min-height: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 20px;
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    #step2 input,
+    #step2 button {
+        width: 100%;
+        max-width: 280px;
+    }
+}
+
+.choice-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    min-height: 200px;
+}
+#btn-love {
+    background: #ff4d6d;
+    color: white;
+    transition: all0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 100;
+    white-space: nowrap;
+}
+#btn-no {
+    background: #a0a0a0;
+    color: white;
+    font-size: 16px !important;
+}
+
+#score-board {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #ff4d6d;
+}
+
+.falling-heart {
+    position: absolute;
+    top: -50px;
+    cursor: pointer;
+    font-size: 40px;
+    user-select: none;
+    animation: fall linear forwards;
+    z-index: 999;
+}
+
+@keyframes fall {
+    from { transform: translateY(0);}
+    to { transform: translateY(500px);}
+}
+
+#catch-area {
+    background-color: rgba(255, 182, 193, 0.1);
+    margin-top: 20px;
+    border-radius: 15px;
+}
+
+/* เลือกคำตอบ */
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.quiz-btn {
+    background-color: rgb(255, 255, 255);
+    color: #c5bdbe;
+    border: 2px solid #ff4d6d;
+    padding: 12px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1.1ram;
+}
+.quiz-btn:hover {
+    background-color: #ff4d6d;
+    color: white;
+}
